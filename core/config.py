@@ -11,3 +11,4 @@ DB_HOST = getenv("DB_HOST")
 DB_PORT = getenv("DB_PORT")
 
 BOT_TOKEN = getenv("BOT_TOKEN")
+FORUM_CHAT_ID = getenv("FORUM_CHAT_ID")

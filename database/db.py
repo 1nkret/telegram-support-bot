@@ -52,7 +52,8 @@ def create_tables():
             created_at TIMESTAMP DEFAULT NOW(),
             status TEXT DEFAULT 'Ожидает обработки',
             curator_id BIGINT DEFAULT NULL,
-            taken_at TIMESTAMP DEFAULT NULL
+            taken_at TIMESTAMP DEFAULT NULL,
+            thread_id INTEGER
         );
 
         -- Таблица логов действий кураторов

@@ -102,6 +102,43 @@ def get_closed_requests():
     return active_requests
 
 
+def get_thread_id(request_id):
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT * FROM curator_requests WHERE id = %s;",
+        (request_id,)
+    )
+
+    active_requsts = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    if active_requsts:
+        return active_requsts[0]
+    return tuple()
+
+
+def update_thread_id(request_id, thread_id):
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        UPDATE curator_requests
+        SET thread_id = %s
+        WHERE id = %s;
+        """,
+        (thread_id, request_id)
+    )
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
 ### ✅ CRUD для curator_logs (Логирование действий кураторов)
 
 def log_action(request_id: int, curator_id: int, action: str):

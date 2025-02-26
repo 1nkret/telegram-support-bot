@@ -1,82 +1,8 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from app.utils.get_datetime import get_datetime
-from database.crud import get_active_requests, get_request, get_closed_requests
+from database.crud import get_request
 
 PAGE_SIZE = 6
-
-
-def create_pagination_buttons(requests, page, total_pages, callback_prefix, add_button=None):
-    buttons = []
-    start = page * PAGE_SIZE
-    end = start + PAGE_SIZE
-    row = []
-
-    for el in requests[start:end]:
-        formatted_date = get_datetime(el[3])
-        row.append(InlineKeyboardButton(
-            text=f"{el[0]} | {formatted_date}",
-            callback_data=f"curator_get_request|{el[0]}"
-        ))
-
-        if len(row) == 2:
-            buttons.append(row)
-            row = []
-
-    if row:
-        buttons.append(row)
-
-    nav_buttons = []
-    if page > 0:
-        nav_buttons.append(
-            InlineKeyboardButton(
-                text="Prev",
-                callback_data=f"{callback_prefix}_page|{page - 1}"
-            )
-        )
-    if add_button:
-        nav_buttons.append(add_button)
-    if page < total_pages - 1:
-        nav_buttons.append(
-            InlineKeyboardButton(
-                text="Next", callback_data=f"{callback_prefix}_page|{page + 1}"
-            )
-        )
-
-    if nav_buttons:
-        buttons.append(nav_buttons)
-
-    return InlineKeyboardMarkup(inline_keyboard=buttons)
-
-
-def curator_menu_keyboard(page=0):
-    requests = get_active_requests()
-    total_pages = (len(requests) + PAGE_SIZE - 1) // PAGE_SIZE
-    return create_pagination_buttons(
-        requests,
-        page,
-        total_pages,
-        "curator_get_paginator_request",
-        InlineKeyboardButton(
-            text="History",
-            callback_data="get_history_requests"
-        )
-    )
-
-
-def curator_menu_closed_requests_keyboard(page=0):
-    requests = get_closed_requests()
-    total_pages = (len(requests) + PAGE_SIZE - 1) // PAGE_SIZE
-    return create_pagination_buttons(
-        requests,
-        page,
-        total_pages,
-        "curator_get_closed_request",
-        InlineKeyboardButton(
-            text="Back",
-            callback_data="curator_menu"
-        )
-    )
 
 
 def curator_manage_request_keyboard(request_id: int, curator_id: int):
@@ -127,28 +53,5 @@ def curator_manage_request_keyboard(request_id: int, curator_id: int):
                 )
             )
         buttons.append(row)
-    buttons.append(
-        [
-            InlineKeyboardButton(
-                text="Повернутися",
-                callback_data="curator_menu"
-            )
-        ]
-    )
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
-
-
-def back_to_curator_menu_keyboard():
-    buttons = [
-        [
-            InlineKeyboardButton(
-                text="Повернутися",
-                callback_data="curator_menu"
-            )
-        ]
-    ]
-
-    return InlineKeyboardMarkup(
-        inline_keyboard=buttons
-    )
