@@ -20,7 +20,7 @@ router = Router()
 @router.callback_query(F.data == "request_to_support")
 async def request_to_support_callback_handler(query: CallbackQuery, state: FSMContext):
     await query.message.answer(
-        text="Напишіть повідомлення куратору:",
+        text="Write your message to support:",
         reply_markup=create_request_to_support_keyboard()
     )
     await query.answer()
@@ -57,7 +57,7 @@ async def request_to_support_create_handler(message: Message, state: FSMContext)
         parse_mode="HTML"
     )
     await message.answer(
-        text=f"Запит до куратора було створено. Статус: {status}",
+        text=f"Request to support was created. Status: {status}",
         reply_markup=cancel_request_to_support_keyboard(request_id)
     )
 
@@ -100,14 +100,14 @@ async def cancel_request_to_support_handler(query: CallbackQuery, state: FSMCont
 
     update_request_status(
         request_id=request_id,
-        status="Скасовано"
+        status="Cancelled"
     )
 
     thread_id = data[7]
 
     await bot.send_message(
         chat_id=FORUM_CHAT_ID,
-        text="<b>Студент завершив діалог.</b>",
+        text="<b>The student has closed the dialogue.</b>",
         message_thread_id=thread_id,
         parse_mode="HTML"
     )
@@ -117,11 +117,11 @@ async def cancel_request(query, state, request_state):
     current_state = await state.get_state()
     if current_state == request_state:
         await state.clear()
-        await query.message.answer(text="Запит було скасовано.")
+        await query.message.answer(text="Request was cancelled.")
         await query.answer()
         return False
     else:
-        await query.answer(text="Запит вже скасовано!")
+        await query.answer(text="Request is already cancelled!")
         return True
 
 
@@ -133,18 +133,18 @@ async def curator_take_request_callback_handler(query: CallbackQuery, state: FSM
     curator_id = data[5]
 
     if curator_id is not None and curator_id != query.from_user.id:
-        await query.answer("Над цим запитом вже працюють!")
+        await query.answer("Someone is already working on this request!")
         return
 
     update_request_status(
         request_id=request_id,
-        status="В роботі",
+        status="In progress",
         curator_id=query.from_user.id
     )
     log_action(
         request_id=request_id,
         curator_id=query.from_user.id,
-        action="Взяв у роботу"
+        action="Started working on the request"
     )
 
     text, kb = await get_manage_menu(request_id, query.from_user.id)
@@ -155,7 +155,7 @@ async def curator_take_request_callback_handler(query: CallbackQuery, state: FSM
     )
     await bot.send_message(
         chat_id=user_id,
-        text="<b>Куратор на зв`язку!</b>",
+        text="<b>The curator is in touch!</b>",
         parse_mode="HTML"
     )
     await state.set_state(Support.processing_request)
@@ -186,15 +186,15 @@ async def curator_close_request_callback_handler(query: CallbackQuery, state: FS
     status = data[4]
     curator_id = data[6]
 
-    if status not in ["Виконано", "Скасовано"]:
+    if status not in ["Completed", "Cancelled"]:
         update_request_status(
             request_id=request_id,
-            status="Виконано"
+            status="Completed"
         )
         log_action(
             request_id=request_id,
             curator_id=query.from_user.id,
-            action="Закрив запит"
+            action="Closed the request"
         )
 
         text, kb = await get_manage_menu(request_id, curator_id)
@@ -205,28 +205,19 @@ async def curator_close_request_callback_handler(query: CallbackQuery, state: FS
         )
         await bot.send_message(
             chat_id=user_id,
-            text="Ваш запит було закрито.",
+            text="Your request has been closed.",
             reply_markup=back_to_menu_user()
         )
         await state.clear()
         return
-    await query.answer("Запит вже закрито.")
-
-
-@router.callback_query(F.data.startswith("back_to_menu_user"))
-async def curator_close_request_callback_handler(query: CallbackQuery, state: FSMContext):
-    st = await state.get_state()
-
-    if st == RequestSupport.processing_request:
-        await state.clear()
-    await menu_handler_common(query.message)
+    await query.answer("Request is already closed.")
 
 
 @router.callback_query(F.data.startswith("curator_switch"))
 async def curator_switch_request_callback_handler(query: CallbackQuery, state: FSMContext):
     await wait_curator_on_request(
         query=query,
-        status="Зміна куратора",
+        status="Curator change",
         state=state,
     )
 
@@ -235,7 +226,7 @@ async def curator_switch_request_callback_handler(query: CallbackQuery, state: F
 async def curator_hold_request_callback_handler(query: CallbackQuery, state: FSMContext):
     await wait_curator_on_request(
         query=query,
-        status="Очікує",
+        status="Waiting",
         state=state,
     )
 
@@ -261,11 +252,11 @@ async def wait_curator_on_request(
     log_action(
         request_id=request_id,
         curator_id=query.from_user.id,
-        action=f"Змінив статус на \"{status}\""
+        action=f"Changed status to \"{status}\""
     )
     await bot.send_message(
         chat_id=user_id,
-        text="<b>Куратори зараз не поруч.</b>",
+        text="<b>Support is currently unavailable.</b>",
         parse_mode="HTML"
     )
 
@@ -285,25 +276,16 @@ async def curator_resume_request_callback_handler(query: CallbackQuery, state: F
 
     update_request_status(
         request_id=request_id,
-        status="В роботі",
+        status="In progress",
     )
     log_action(
         request_id=request_id,
         curator_id=query.from_user.id,
-        action="Змінив статус на \"В роботі\""
+        action="Changed status to \"In progress\""
     )
-
-    await state.set_state(Support.processing_request)
-    await state.set_data({"request_id": request_id})
 
     await bot.send_message(
         chat_id=user_id,
-        text="<b>Куратор на зв`язку!</b>",
-        parse_mode="HTML"
-    )
-    text, kb = await get_manage_menu(request_id, query.from_user.id)
-    await query.message.edit_text(
-        text=text,
-        reply_markup=kb,
+        text="<b>Support is now available!</b>",
         parse_mode="HTML"
     )

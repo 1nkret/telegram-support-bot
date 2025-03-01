@@ -13,8 +13,8 @@ async def get_manage_menu(request_id, from_user_id, msg: str = ""):
     taken_at = data[6]
 
     if taken_at:
-        taken_at = (f"<b>Час взяття запиту:</b> <code>{get_datetime(taken_at)}</code>\n"
-                    f"<b>Швидкість реакції:</b> <code>{get_short_datetime(taken_at - created_at)}</code>")
+        taken_at = (f"<b>Request taken at:</b> <code>{get_datetime(taken_at)}</code>\n"
+                    f"<b>Reaction speed:</b> <code>{get_short_datetime(taken_at - created_at)}</code>")
     else:
         taken_at = "\n"
 

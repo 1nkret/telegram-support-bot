@@ -1,11 +1,10 @@
 from database.db import connect_db
 from datetime import datetime
 
-
-### ✅ CRUD для curator_requests (Запросы учеников)
+### ✅ CRUD for curator_requests (Student Requests)
 
 def create_request(student_id: int, request_text: str) -> int:
-    """Создает новый запрос в БД и возвращает его ID"""
+    """Creates a new request in the database and returns its ID"""
     conn = connect_db()
     cursor = conn.cursor()
 
@@ -23,7 +22,7 @@ def create_request(student_id: int, request_text: str) -> int:
 
 
 def get_request(request_id: int):
-    """Получает запрос по ID"""
+    """Retrieves a request by ID"""
     conn = connect_db()
     cursor = conn.cursor()
 
@@ -36,7 +35,7 @@ def get_request(request_id: int):
 
 
 def update_request_status(request_id: int, status: str, curator_id: int = None):
-    """Обновляет статус запроса (и куратора, если нужно)"""
+    """Updates the request status (and curator if needed)"""
     conn = connect_db()
     cursor = conn.cursor()
 
@@ -59,7 +58,7 @@ def update_request_status(request_id: int, status: str, curator_id: int = None):
 
 
 def delete_request(request_id: int):
-    """Удаляет запрос из базы"""
+    """Deletes a request from the database"""
     conn = connect_db()
     cursor = conn.cursor()
 
@@ -71,15 +70,15 @@ def delete_request(request_id: int):
 
 
 def get_active_requests():
-    """Получает все активные запросы со статусом 'Ожидает обработки...'."""
+    """Retrieves all active requests with status 'Pending processing'."""
     conn = connect_db()
     cursor = conn.cursor()
 
     cursor.execute(
         "SELECT * FROM curator_requests WHERE status IN (%s, %s, %s, %s);",
-        ("Ожидает обработки", "В роботі", "Очікує", "Зміна куратора")
+        ("Pending processing", "In progress", "Waiting", "Curator change")
     )
-    active_requests = cursor.fetchall()  # Получаем все записи
+    active_requests = cursor.fetchall()
 
     cursor.close()
     conn.close()
@@ -87,19 +86,19 @@ def get_active_requests():
 
 
 def get_closed_requests():
-    """Получает все активные запросы со статусом 'Ожидает обработки...'."""
+    """Retrieves all closed requests."""
     conn = connect_db()
     cursor = conn.cursor()
 
     cursor.execute(
         "SELECT * FROM curator_requests WHERE status IN (%s, %s);",
-        ("Скасовано", "Виконано")
+        ("Cancelled", "Completed")
     )
-    active_requests = cursor.fetchall()  # Получаем все записи
+    closed_requests = cursor.fetchall()
 
     cursor.close()
     conn.close()
-    return active_requests
+    return closed_requests
 
 
 def get_thread_id(request_id):
@@ -111,13 +110,13 @@ def get_thread_id(request_id):
         (request_id,)
     )
 
-    active_requsts = cursor.fetchall()
+    active_requests = cursor.fetchall()
 
     cursor.close()
     conn.close()
 
-    if active_requsts:
-        return active_requsts[0]
+    if active_requests:
+        return active_requests[0]
     return tuple()
 
 
@@ -139,10 +138,10 @@ def update_thread_id(request_id, thread_id):
     conn.close()
 
 
-### ✅ CRUD для curator_logs (Логирование действий кураторов)
+### ✅ CRUD for curator_logs (Curator Action Logs)
 
 def log_action(request_id: int, curator_id: int, action: str):
-    """Логирует действие куратора"""
+    """Logs a curator's action"""
     conn = connect_db()
     cursor = conn.cursor()
 
@@ -157,7 +156,7 @@ def log_action(request_id: int, curator_id: int, action: str):
 
 
 def get_logs(request_id: int):
-    """Получает все логи по запросу"""
+    """Retrieves all logs for a request"""
     conn = connect_db()
     cursor = conn.cursor()
 
@@ -169,10 +168,10 @@ def get_logs(request_id: int):
     return logs
 
 
-### ✅ CRUD для curator_messages (Сообщения в диалогах)
+### ✅ CRUD for curator_messages (Dialog Messages)
 
 def add_message(request_id: int, sender_id: int, sender_role: str, message_text: str):
-    """Добавляет сообщение в диалог"""
+    """Adds a message to the dialog"""
     conn = connect_db()
     cursor = conn.cursor()
 
@@ -187,7 +186,7 @@ def add_message(request_id: int, sender_id: int, sender_role: str, message_text:
 
 
 def get_messages(request_id: int):
-    """Получает всю переписку в диалоге"""
+    """Retrieves all messages in a dialog"""
     conn = connect_db()
     cursor = conn.cursor()
 

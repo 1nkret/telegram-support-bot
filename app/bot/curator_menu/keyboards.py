@@ -1,8 +1,5 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-
 from database.crud import get_request
-
-PAGE_SIZE = 6
 
 
 def curator_manage_request_keyboard(request_id: int, curator_id: int):
@@ -14,19 +11,19 @@ def curator_manage_request_keyboard(request_id: int, curator_id: int):
     buttons = []
     row = []
 
-    if status in ["Ожидает обработки", "Зміна куратора"]:
+    if status in ["Pending processing", "Curator change"]:
         row.append(
             InlineKeyboardButton(
-                text="Взяти в роботу",
+                text="Take in work",
                 callback_data=f"curator_take_request|{request_id}"
             )
         )
         buttons.append(row)
-    elif (curator_id == curator and status != "Виконано" or
-          curator_id == curator and status == "Очікує"):
+    elif (curator_id == curator and status != "Completed" or
+          curator_id == curator and status == "Waiting"):
         row.append(
             InlineKeyboardButton(
-                text="Завершити діалог",
+                text="Close dialogue",
                 callback_data=f"curator_close_request|{request_id}"
             )
         )
@@ -34,21 +31,21 @@ def curator_manage_request_keyboard(request_id: int, curator_id: int):
 
         row = [
             InlineKeyboardButton(
-                text="Переназначити куратора",
+                text="Reassign curator",
                 callback_data=f"curator_switch|{request_id}"
             )
         ]
-        if status == "В роботі":
+        if status == "In progress":
             row.append(
                 InlineKeyboardButton(
-                    text="Поставити на утримання",
+                    text="Put on hold",
                     callback_data=f"curator_hold_request|{request_id}"
                 )
             )
-        elif status == "Очікує":
+        elif status == "Waiting":
             row.append(
                 InlineKeyboardButton(
-                    text="Зняти з утримання",
+                    text="Resume request",
                     callback_data=f"curator_resume_request|{request_id}"
                 )
             )

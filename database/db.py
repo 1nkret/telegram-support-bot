@@ -32,7 +32,6 @@ def create_database():
 
     if not exists:
         cursor.execute(f"CREATE DATABASE {DB_NAME};")
-        print(f"✅ База данных '{DB_NAME}' создана.")
 
     cursor.close()
     conn.close()
@@ -50,7 +49,7 @@ def create_tables():
             student_id BIGINT NOT NULL,
             request_text TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT NOW(),
-            status TEXT DEFAULT 'Ожидает обработки',
+            status TEXT DEFAULT 'Pending processing',
             curator_id BIGINT DEFAULT NULL,
             taken_at TIMESTAMP DEFAULT NULL,
             thread_id INTEGER
@@ -79,7 +78,6 @@ def create_tables():
     conn.commit()
     cursor.close()
     conn.close()
-    print("✅ Таблицы созданы или уже существуют.")
 
 
 if __name__ == "__main__":
