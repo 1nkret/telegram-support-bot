@@ -5,7 +5,7 @@ def create_request_to_support_keyboard():
     buttons = [
         [
             InlineKeyboardButton(
-                text="Повернутися",
+                text="Return",
                 callback_data="back_request_to_support"
             )
         ]
@@ -17,7 +17,7 @@ def cancel_request_to_support_keyboard(request_id):
     buttons = [
         [
             InlineKeyboardButton(
-                text="Завершити діалог",
+                text="End dialogue",
                 callback_data=f"cancel_request_to_support|{request_id},"
             )
         ]
@@ -29,7 +29,7 @@ def back_to_menu_user():
     buttons = [
         [
             InlineKeyboardButton(
-                text="Повернутися до меню",
+                text="Return to menu",
                 callback_data="back_to_menu_user"
             )
         ]

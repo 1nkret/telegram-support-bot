@@ -5,7 +5,7 @@ def request_to_support():
     buttons = [
         [
             InlineKeyboardButton(
-                text="Підтримка",
+                text="Create ticket",
                 callback_data="request_to_support"
             )
         ]
