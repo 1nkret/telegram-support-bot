@@ -10,8 +10,7 @@ from .state import RequestSupport, Support
 
 from app.utils.find_args import find_args
 from app.utils.get_datetime import get_datetime
-from app.bot.curator_menu.templates import get_manage_menu
-from app.bot.menu.templates import menu_handler_common
+from app.bot.support_menu.templates import get_manage_menu
 from main import bot
 
 router = Router()
@@ -31,7 +30,7 @@ async def request_to_support_callback_handler(query: CallbackQuery, state: FSMCo
 async def request_to_support_create_handler(message: Message, state: FSMContext):
     request_id = create_request(
         request_text=message.text,
-        student_id=message.from_user.id
+        user_id=message.from_user.id
     )
     data = get_request(request_id)
     status = data[4]
@@ -74,7 +73,7 @@ async def text_to_support_handler(message: Message, state: FSMContext):
         add_message(
             request_id=request_id,
             sender_id=message.from_user.id,
-            sender_role="Student",
+            sender_role="User",
             message_text=message.text
         )
         await bot.send_message(
@@ -107,7 +106,7 @@ async def cancel_request_to_support_handler(query: CallbackQuery, state: FSMCont
 
     await bot.send_message(
         chat_id=FORUM_CHAT_ID,
-        text="<b>The student has closed the dialogue.</b>",
+        text="<b>The user has closed the dialogue.</b>",
         message_thread_id=thread_id,
         parse_mode="HTML"
     )
@@ -125,25 +124,25 @@ async def cancel_request(query, state, request_state):
         return True
 
 
-@router.callback_query(F.data.startswith("curator_take_request"))
-async def curator_take_request_callback_handler(query: CallbackQuery, state: FSMContext):
+@router.callback_query(F.data.startswith("support_take_request"))
+async def support_take_request_callback_handler(query: CallbackQuery, state: FSMContext):
     request_id = find_args(query.data)[0]
     data = get_request(request_id)
     user_id = data[1]
-    curator_id = data[5]
+    support_id = data[5]
 
-    if curator_id is not None and curator_id != query.from_user.id:
+    if support_id is not None and support_id != query.from_user.id:
         await query.answer("Someone is already working on this request!")
         return
 
     update_request_status(
         request_id=request_id,
         status="In progress",
-        curator_id=query.from_user.id
+        support_id=query.from_user.id
     )
     log_action(
         request_id=request_id,
-        curator_id=query.from_user.id,
+        support_id=query.from_user.id,
         action="Started working on the request"
     )
 
@@ -155,7 +154,7 @@ async def curator_take_request_callback_handler(query: CallbackQuery, state: FSM
     )
     await bot.send_message(
         chat_id=user_id,
-        text="<b>The curator is in touch!</b>",
+        text="<b>Support is in touch!</b>",
         parse_mode="HTML"
     )
     await state.set_state(Support.processing_request)
@@ -163,28 +162,28 @@ async def curator_take_request_callback_handler(query: CallbackQuery, state: FSM
 
 
 @router.message(Support.processing_request)
-async def curator_send_message_to_request(message: Message, state: FSMContext):
+async def support_send_message_to_request(message: Message, state: FSMContext):
     data = await state.get_data()
     request_id = data.get("request_id")
     request_data = get_request(request_id)
-    student_id = request_data[1]
+    user_id = request_data[1]
 
     add_message(
         message_text=message.text,
         sender_id=message.from_user.id,
-        sender_role="Curator",
+        sender_role="Support",
         request_id=request_id
     )
-    await bot.send_message(student_id, f"{message.text}")
+    await bot.send_message(user_id, f"{message.text}")
 
 
-@router.callback_query(F.data.startswith("curator_close_request"))
-async def curator_close_request_callback_handler(query: CallbackQuery, state: FSMContext):
+@router.callback_query(F.data.startswith("support_close_request"))
+async def support_close_request_callback_handler(query: CallbackQuery, state: FSMContext):
     request_id = find_args(query.data)[0]
     data = get_request(request_id)
     user_id = data[1]
     status = data[4]
-    curator_id = data[6]
+    support_id = data[6]
 
     if status not in ["Completed", "Cancelled"]:
         update_request_status(
@@ -193,11 +192,11 @@ async def curator_close_request_callback_handler(query: CallbackQuery, state: FS
         )
         log_action(
             request_id=request_id,
-            curator_id=query.from_user.id,
+            support_id=query.from_user.id,
             action="Closed the request"
         )
 
-        text, kb = await get_manage_menu(request_id, curator_id)
+        text, kb = await get_manage_menu(request_id, support_id)
         await query.message.edit_text(
             text=text,
             reply_markup=kb,
@@ -213,25 +212,25 @@ async def curator_close_request_callback_handler(query: CallbackQuery, state: FS
     await query.answer("Request is already closed.")
 
 
-@router.callback_query(F.data.startswith("curator_switch"))
-async def curator_switch_request_callback_handler(query: CallbackQuery, state: FSMContext):
-    await wait_curator_on_request(
+@router.callback_query(F.data.startswith("support_switch"))
+async def support_switch_request_callback_handler(query: CallbackQuery, state: FSMContext):
+    await wait_support_on_request(
         query=query,
-        status="Curator change",
+        status="Support change",
         state=state,
     )
 
 
-@router.callback_query(F.data.startswith("curator_hold_request"))
-async def curator_hold_request_callback_handler(query: CallbackQuery, state: FSMContext):
-    await wait_curator_on_request(
+@router.callback_query(F.data.startswith("support_hold_request"))
+async def support_hold_request_callback_handler(query: CallbackQuery, state: FSMContext):
+    await wait_support_on_request(
         query=query,
         status="Waiting",
         state=state,
     )
 
 
-async def wait_curator_on_request(
+async def wait_support_on_request(
         query: CallbackQuery,
         status: str,
         state: FSMContext,
@@ -251,7 +250,7 @@ async def wait_curator_on_request(
 
     log_action(
         request_id=request_id,
-        curator_id=query.from_user.id,
+        support_id=query.from_user.id,
         action=f"Changed status to \"{status}\""
     )
     await bot.send_message(
@@ -268,8 +267,8 @@ async def wait_curator_on_request(
     )
 
 
-@router.callback_query(F.data.startswith("curator_resume_request"))
-async def curator_resume_request_callback_handler(query: CallbackQuery, state: FSMContext):
+@router.callback_query(F.data.startswith("support_resume_request"))
+async def support_resume_request_callback_handler(query: CallbackQuery, state: FSMContext):
     request_id = find_args(query.data)[0]
     data = get_request(request_id)
     user_id = data[1]
@@ -280,7 +279,7 @@ async def curator_resume_request_callback_handler(query: CallbackQuery, state: F
     )
     log_action(
         request_id=request_id,
-        curator_id=query.from_user.id,
+        support_id=query.from_user.id,
         action="Changed status to \"In progress\""
     )
 

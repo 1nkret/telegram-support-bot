@@ -13,4 +13,4 @@ def get_short_datetime(date):
 
 def format_timedelta(delta):
     minutes, seconds = divmod(int(delta.total_seconds()), 60)
-    return f"{minutes} хвилин {seconds} секунд"
+    return f"{minutes} minutes {seconds} seconds"
