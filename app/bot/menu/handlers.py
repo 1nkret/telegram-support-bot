@@ -6,7 +6,7 @@ from main import bot
 router = Router()
 
 
-@router.message(F.text == "/menu")
+@router.message(F.text == "/menu" or F.text == "/ticket")
 async def menu_message_handler(message: Message):
     await menu_handler_common(message)
 
