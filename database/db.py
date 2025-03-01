@@ -3,22 +3,10 @@ from psycopg2.extras import DictCursor
 from core.config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
 
 
-def connect_db():
-    """Создает подключение к БД"""
-    return psycopg2.connect(
-        dbname=DB_NAME,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        host=DB_HOST,
-        port=DB_PORT,
-        cursor_factory=DictCursor
-    )
-
-
 def create_database():
     """Создает базу данных, если её нет"""
     conn = psycopg2.connect(
-        dbname=DB_NAME,
+        dbname="postgres",
         user=DB_USER,
         password=DB_PASSWORD,
         host=DB_HOST,
@@ -32,9 +20,22 @@ def create_database():
 
     if not exists:
         cursor.execute(f"CREATE DATABASE {DB_NAME};")
+        print(f"Database {DB_NAME} is successful created.")
 
     cursor.close()
     conn.close()
+
+
+def connect_db():
+    """Создает подключение к БД"""
+    return psycopg2.connect(
+        dbname=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        host=DB_HOST,
+        port=DB_PORT,
+        cursor_factory=DictCursor
+    )
 
 
 def create_tables():
@@ -44,30 +45,30 @@ def create_tables():
 
     cursor.execute("""
         -- Таблица запросов (диалогов)
-        CREATE TABLE IF NOT EXISTS curator_requests (
+        CREATE TABLE IF NOT EXISTS support_requests (
             id SERIAL PRIMARY KEY,
-            student_id BIGINT NOT NULL,
+            user_id BIGINT NOT NULL,
             request_text TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT NOW(),
             status TEXT DEFAULT 'Pending processing',
-            curator_id BIGINT DEFAULT NULL,
+            support_id BIGINT DEFAULT NULL,
             taken_at TIMESTAMP DEFAULT NULL,
             thread_id INTEGER
         );
 
         -- Таблица логов действий кураторов
-        CREATE TABLE IF NOT EXISTS curator_logs (
+        CREATE TABLE IF NOT EXISTS support_logs (
             id SERIAL PRIMARY KEY,
-            request_id INT REFERENCES curator_requests(id) ON DELETE CASCADE,
-            curator_id BIGINT NOT NULL,
+            request_id INT REFERENCES support_requests(id) ON DELETE CASCADE,
+            support_id BIGINT NOT NULL,
             action TEXT NOT NULL,
             action_time TIMESTAMP DEFAULT NOW()
         );
 
         -- Таблица сообщений в диалогах
-        CREATE TABLE IF NOT EXISTS curator_messages (
+        CREATE TABLE IF NOT EXISTS support_messages (
             id SERIAL PRIMARY KEY,
-            request_id INT REFERENCES curator_requests(id) ON DELETE CASCADE,
+            request_id INT REFERENCES support_requests(id) ON DELETE CASCADE,
             sender_id BIGINT NOT NULL,
             sender_role TEXT NOT NULL,
             message_text TEXT NOT NULL,

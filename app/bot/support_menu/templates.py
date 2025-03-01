@@ -1,4 +1,4 @@
-from app.bot.curator_menu.keyboards import curator_manage_request_keyboard
+from app.bot.support_menu.keyboards import support_manage_request_keyboard
 from app.utils.find_args import find_args
 from app.utils.get_datetime import get_datetime, get_short_datetime
 from database.crud import get_request, get_messages
@@ -19,10 +19,10 @@ async def get_manage_menu(request_id, from_user_id, msg: str = ""):
         taken_at = "\n"
 
     text = (f"<code>{get_datetime(created_at)}</code>\n"
-             f"<b>Student:</b> {request_text}\n"
+             f"<b>User:</b> {request_text}\n"
              f"{taken_at}\n"
              f"<b>Status:</b> {status}\n"
              f"{msg}")
-    kb = curator_manage_request_keyboard(request_id, from_user_id)
+    kb = support_manage_request_keyboard(request_id, from_user_id)
 
     return text, kb
